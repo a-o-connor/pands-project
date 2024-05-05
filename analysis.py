@@ -11,9 +11,13 @@ import scipy
 df = pd.read_csv("https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/0e7a9b0a5d22642a06d3d5b9bcbad9890c8ee534/iris.csv")
 
 ###############################  1. Summary  of each variable  ###################################  
-# Print the summary statistics of all the variables of the data set
-# print(df.describe())
-# print(df.info())
+# Print the summary statistics of all the variables of the data set into a text file:
+df.describe().to_markdown("variable_summary.txt",  floatfmt='.3f') #https://pypi.org/project/tabulate/   #https://stackoverflow.com/questions/66236289/how-do-you-control-float-formatting-when-using-dataframe-to-markdown-in-pandas
+filename = "variable_summary.txt"
+with open (filename, "a") as a:
+    a.write("\n The table below contains a summary of some stuff")
+
+
 
 ###############################  2. Histogram of each variable  ###################################
 
