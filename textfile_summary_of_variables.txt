@@ -1,0 +1,25 @@
+The Iris data set describes the attributes of three species of the Iris flower.                     
+Species is a categorical variable in the data set.                     
+Petal length, petal width, sepal length and sepal width are continuous, numeric variables in the Iris data set.                     
+The table below describes the summary statistics of the continuous numerical variables in the Iris data set.                     
+                     
+|       |   sepal_length |   sepal_width |   petal_length |   petal_width |
+|:------|---------------:|--------------:|---------------:|--------------:|
+| count |        150.000 |       150.000 |        150.000 |       150.000 |
+| mean  |          5.843 |         3.054 |          3.759 |         1.199 |
+| std   |          0.828 |         0.434 |          1.764 |         0.763 |
+| min   |          4.300 |         2.000 |          1.000 |         0.100 |
+| 25%   |          5.100 |         2.800 |          1.600 |         0.300 |
+| 50%   |          5.800 |         3.000 |          4.350 |         1.300 |
+| 75%   |          6.400 |         3.300 |          5.100 |         1.800 |
+| max   |          7.900 |         4.400 |          6.900 |         2.500 |                     
+                     
+The mean of each attribute grouped by species is tabulated below.
+                     
+                     
+|              |   setosa |   versicolor |   virginica |
+|:-------------|---------:|-------------:|------------:|
+| Sepal Length |    5.006 |        5.936 |       6.588 |
+| Sepal Width  |    3.418 |        2.77  |       2.974 |
+| Petal Length |    1.464 |        4.26  |       5.552 |
+| Petal Width  |    0.244 |        1.326 |       2.026 |

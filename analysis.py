@@ -5,19 +5,44 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sb
 import scipy
+import os
 
 ###################################
 # Load the data set
 df = pd.read_csv("https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7/raw/0e7a9b0a5d22642a06d3d5b9bcbad9890c8ee534/iris.csv")
+# Define the variables
+filename = "textfile_summary_of_variables.txt"
+
+descriptive_summary_statistics = df.describe().to_markdown(floatfmt='.3f')
+species = (df["species"].unique()) # returns a np array with the three species in the data frame
+species_means = {
+    "Sepal Length": list(df.groupby(["species"])["sepal_length"].mean()), # Returns a Pandas series with the mean of sepal length by species
+    "Sepal Width": list(df.groupby(["species"])["sepal_width"].mean()),
+    "Petal Length": list(df.groupby(["species"])["petal_length"].mean()),
+    "Petal Width": list(df.groupby(["species"])["petal_width"].mean())
+}
+species_means_df = pd.DataFrame.from_dict(species_means, orient='index', columns=species).to_markdown()
 
 ###############################  1. Summary  of each variable  ###################################  
 # Print the summary statistics of all the variables of the data set into a text file:
-df.describe().to_markdown("variable_summary.txt",  floatfmt='.3f') #https://pypi.org/project/tabulate/   #https://stackoverflow.com/questions/66236289/how-do-you-control-float-formatting-when-using-dataframe-to-markdown-in-pandas
-filename = "variable_summary.txt"
-with open (filename, "a") as a:
-    a.write("\n The table below contains a summary of some stuff")
-
-
+def create_text_file_with_summary_of_variables(filename):
+    if os.path.exists(filename):
+        print(f"{filename} already exists in this directory.")
+    else:
+        with open (filename, "w") as a:
+            a.write(f'The Iris data set describes the attributes of three species of the Iris flower. \
+                    \nSpecies is a categorical variable in the data set. \
+                    \nPetal length, petal width, sepal length and sepal width are continuous, numeric variables in the Iris data set. \
+                    \nThe table below describes the summary statistics of the continuous numerical variables in the Iris data set. \
+                    \n \
+                    \n{descriptive_summary_statistics} \
+                    \n \
+                    \nThe mean of each attribute grouped by species is tabulated below.\n \
+                    \n \
+                    \n{species_means_df}'
+                    )
+            
+create_text_file_with_summary_of_variables(filename)
 
 ###############################  2. Histogram of each variable  ###################################
 
@@ -79,14 +104,6 @@ scatterplot("sepal_width", "petal_length", "petal_width")
 
 ###############################  Barchart of each variable by Species  ###################################
 #Plot a bar chart of mean Sepal  length, Sepal Width, Petal Width and Petal length by species on the same plot
-species = list(df["species"].unique()) # returns a np array with the three species in the data frame
-species_means = {
-    "Sepal Length": list(df.groupby(["species"])["sepal_length"].mean()), # Returns a Pandas series with the mean of sepal length by species
-    "Sepal Width": list(df.groupby(["species"])["sepal_width"].mean()),
-    "Petal Length": list(df.groupby(["species"])["petal_length"].mean()),
-    "Petal Width": list(df.groupby(["species"])["petal_width"].mean())
-}
-
 x = np.arange(len(species))  # returns a numpy array same length as the species list created earlier
 
 fig, ax = plt.subplots()
@@ -100,6 +117,6 @@ ax.set_ylabel('Length/ Width (mm)') #Label y axis
 ax.set_xlabel('Species') #Label x axis
 ax.set_title('Iris Sepal and Petal Length and Width by Species') # Set title of bar chart 
 ax.set_xticks(x + 0.3, species) # Labels and ticks on the x axis, offset so that the ticks sit in the middle of the 4 bars
-fig.legend(loc = "upper right", bbox_to_anchor=(-0.13, 0.38, 0.5, 0.5)) # Setting the location of the legend outside of the plot.
+fig.legend(loc = "upper right", bbox_to_anchor=(-0.13, 0.38, 0.5, 0.5)) # Setting the location of the legend.
 plt.savefig("Barchart by Species")
 
