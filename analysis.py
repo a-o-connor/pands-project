@@ -27,7 +27,7 @@ species_means_df = pd.DataFrame.from_dict(species_means, orient='index', columns
 # Print the summary statistics of all the variables of the data set into a text file:
 def create_text_file_with_summary_of_variables(filename):
     if os.path.exists(filename):
-        print(f"{filename} already exists in this directory.")
+        print(f"The file {filename} already exists in this directory. \nCheck {filename} in the folder {(os.getcwd())} for a summary of the variables in the Iris Dataset. ")
     else:
         with open (filename, "w") as a:
             a.write(f'The Iris data set describes the attributes of three species of the Iris flower. \
