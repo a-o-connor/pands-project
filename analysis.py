@@ -22,7 +22,9 @@ species_means = {
     "Petal Width": list(df.groupby(["species"])["petal_width"].mean())
 }
 species_means_df = pd.DataFrame.from_dict(species_means, orient='index', columns=species)
-correlation_matrix = df.select_dtypes(include = ('number')).corr() #Returns a correlation matrix with the R values for the correlation between each of the numeric values
+numeric_df = df.replace({'setosa':0,'versicolor':1, 'virginica':2}) ##Need to recode the categorical variable "species" as a numeric variable as .corr() only accepts a numeric df
+correlation_matrix = (numeric_df.corr()) #Returns a correlation matrix with the R values for the correlation between each of the numeric variables
+                                                                                     
 
 ###############################  1. Textfile with a summary  of each variable  ###################################  
 # Print the summary statistics of all the variables of the data set into a text file:
@@ -60,7 +62,7 @@ histogram("sepal_width")
 histogram("petal_length")
 histogram("petal_width")
 
-###############################  3. Scatterplot of each variable  ###################################
+############################### 3. Scatterplot of each variable  ###################################
 
 def scatterplot(x_value, y_value, colour):
     m, c = np.polyfit(                 #Identify the best fit line, y = mx+c, for x vs y, using Numpy's polyfit to do a least squares fit determine m and c
@@ -101,7 +103,10 @@ scatterplot("petal_length", "petal_width", "sepal_length")
 scatterplot("sepal_width", "petal_width", "petal_length")
 scatterplot("sepal_width", "petal_length", "petal_width")
 
-############################### Plot a Barchart of the mean of each variable by Species  #########################
+############################### 4. Bivariate Analysis: Correlations ###################################
+
+#4.1 Categorical Variables Correlations: How do the Iris flower attributes measured vary between the different species? 
+
 #Plot a bar chart of mean Sepal  length, Sepal Width, Petal Width and Petal length by species on the same plot
 x = np.arange(len(species))  # returns a numpy array same length as the species list created earlier
 
@@ -119,7 +124,7 @@ ax.set_xticks(x + 0.3, species) # Labels and ticks on the x axis, offset so that
 fig.legend(loc = "upper right", bbox_to_anchor=(-0.13, 0.38, 0.5, 0.5)) # Setting the location of the legend.
 fig.savefig("Barchart by Species")
 
-############################### Plot a Boxplot of each variable by Species  ###################################
+#From the barchart, petal length and sepal length seem to shows the most variance between species. Plot a boxplot of these variables by species 
 def boxplot(attribute, color_by):
         fig1, ax1 = plt.subplots()
         sb.boxplot(ax = ax1, x="species", y=attribute, data = df, color ="white")
@@ -131,3 +136,76 @@ def boxplot(attribute, color_by):
 
 boxplot("petal_length", "petal_width")
 boxplot("sepal_length", "sepal_width")
+
+
+#Perform an Independent Samples Student's T test to determine if a statistically significant difference in Petal Length exists between the Versicolor and Virgnica species. 
+
+petal_length_by_species = df.groupby(["species"])["petal_length"]
+mean_petal_length_by_species = petal_length_by_species.mean() #The mean of each group is required
+std_petal_length_by_species = petal_length_by_species.std() #The standard deviation of each group is required 
+count_by_species = petal_length_by_species.count()#The no. of data points in each group is required
+
+
+#Scipy will perform an indenpendent 2 sample t-test on the groups and return the calculated t statistics and the p-value
+#The test performed assumes equal variances within the two groups
+tstatistic_petal_length, pvalue_petal_length =scipy.stats.ttest_ind_from_stats(mean1 = mean_petal_length_by_species["versicolor"], std1 = std_petal_length_by_species ["versicolor"], nobs1 = count_by_species["versicolor"],
+                                 mean2 = mean_petal_length_by_species["virginica"], std2 = std_petal_length_by_species ["virginica"], nobs2 = count_by_species["virginica"])
+
+#Perform an Oneway ANOVA to determine if a statistically significant difference in Sepal Length exists between the three species. 
+
+tstatistic_sepal_length, pvalue_sepal_length = scipy.stats.f_oneway(
+    df.groupby(["species"]).get_group("setosa")["sepal_length"],
+    df.groupby(["species"]).get_group("versicolor")["sepal_length"],
+    df.groupby(["species"]).get_group("virginica")["sepal_length"]
+)
+
+#4.2: Continuous, Numerical Variable Correlations: How are each of the numeric variables correlated with each other? 
+
+# Plot a matrix of the scatterplot between each of the numeric variables in the data frame
+pairplot = sb.pairplot(data = df, hue = "species")
+pairplot.savefig("Scatterplot Matrix For Each Pair Of Variables in the Iris Data Set")
+
+# Colour map on correlation R values for each variable (including encoded categorical species variable) 
+fig, ax = plt.subplots(layout = "constrained")
+sb.heatmap(ax=ax, data = correlation_matrix, cmap = "coolwarm", vmin = -1, annot = True)
+ax.set_title("Heatmap of Correlations between Variables")
+fig.savefig("Heatmap of Correlations between Variables.png")
+
+############################### 5. Multivariate Analysis: PCA ###################################
+from sklearn.decomposition import PCA 
+
+pca = PCA(n_components=5)
+scores = pca.fit_transform(numeric_df) 
+loadings = (pca.components_.T)
+scree = pd.DataFrame(pca.explained_variance_ratio_, index=[1,2,3,4,5])
+species_numeric = numeric_df.species
+
+# fig, axs = plt.subplots(2,2, figsize = (9,9))
+fig, axs = plt.subplots(1, 3, figsize=(19, 5), layout = "constrained")          
+
+for name, label in [("Setosa", 0), ("Versicolour", 1), ("Virginica", 2)]:
+    axs[0].scatter(scores[species_numeric==label,0], scores[species_numeric==label,1], label = name)
+    axs[0].legend(loc="lower right")
+    axs[0].set_xlabel("Principal Component 1")
+    axs[0].set_ylabel("Principal Component 2")
+    axs[0].set_title("Scores Plot")
+
+
+
+axs[1].scatter(loadings[:,0],loadings[:,1], marker = "^", s = 150, c = "DarkRed")
+axs[1].set_xlabel("Principal Component 1")
+axs[1].set_ylabel("Principal Component 2")
+axs[1].set_title("Loadings Plot")
+for i, column_name in enumerate(list(df.columns.values)):
+    axs[1].annotate(text = column_name, xy = (loadings[i,0], loadings[i,1]), xytext = (-16,-16), textcoords=('offset points'))
+axs[1].set_ylim(-0.3, 0.9)
+axs[1].set_xlim(-0.2, 1)
+
+axs[2].plot(scree, "o", linestyle = "-")
+axs[2].set_xlabel("Principal Component")
+axs[2].set_xticks(ticks = [1,2,3,4,5], minor = 1)
+axs[2].set_xlim(0.5)
+axs[2].set_ylabel("Explained Variance")
+axs[2].set_title("Scree Plot")
+fig.savefig("Iris Principal Component Analysis.png")
+
