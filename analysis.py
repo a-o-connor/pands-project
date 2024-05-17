@@ -198,8 +198,8 @@ axs[1].set_ylabel("Principal Component 2")
 axs[1].set_title("Loadings Plot")
 for i, column_name in enumerate(list(df.columns.values)):
     axs[1].annotate(text = column_name, xy = (loadings[i,0], loadings[i,1]), xytext = (-16,-16), textcoords=('offset points'))
-axs[1].set_ylim(-0.3, 0.9)
-axs[1].set_xlim(-0.2, 1)
+axs[1].set_ylim(-1, 1)
+axs[1].set_xlim(-1, 1)
 
 axs[2].plot(scree, "o", linestyle = "-")
 axs[2].set_xlabel("Principal Component")
