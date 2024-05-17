@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sb
 import scipy
 import os
+from sklearn.decomposition import PCA 
 
 ###################################
 # Load the data set
@@ -13,17 +14,17 @@ df = pd.read_csv("https://gist.githubusercontent.com/curran/a08a1080b88344b0c8a7
 # Define the variables that will be used in this script: 
 filename = "textfile_summary_of_variables.txt"
 
-descriptive_summary_statistics = df.describe().to_markdown(floatfmt='.3f') #to_markdown() is a Pandas 
+descriptive_summary_statistics = df.describe().to_markdown(floatfmt='.3f') 
 species = (df["species"].unique()) # returns a np array with the three species in the data frame
 species_means = {
-    "Sepal Length": list(df.groupby(["species"])["sepal_length"].mean()), # Returns a Pandas series with the mean of sepal length by species
+    "Sepal Length": list(df.groupby(["species"])["sepal_length"].mean()), # Returns a Pandas series with the mean of sepal length by species. list wrapper will convert it to list to be stored in the dict object 
     "Sepal Width": list(df.groupby(["species"])["sepal_width"].mean()),
     "Petal Length": list(df.groupby(["species"])["petal_length"].mean()),
     "Petal Width": list(df.groupby(["species"])["petal_width"].mean())
 }
-species_means_df = pd.DataFrame.from_dict(species_means, orient='index', columns=species)
-numeric_df = df.replace({'setosa':0,'versicolor':1, 'virginica':2}) ##Need to recode the categorical variable "species" as a numeric variable as .corr() only accepts a numeric df
-correlation_matrix = (numeric_df.corr()) #Returns a correlation matrix with the R values for the correlation between each of the numeric variables
+species_means_df = pd.DataFrame.from_dict(species_means, orient='index', columns=species) #Why did I convert back into df? 
+numeric_df = df.replace({'setosa':0,'versicolor':1, 'virginica':2}) #Need to recode the categorical variable "species" as a numeric variable as .corr() only accepts a numeric df
+correlation_matrix = (numeric_df.corr()) #Returns a correlation matrix with the R values for the correlation between each of the numeric variables.
                                                                                      
 
 ###############################  1. Textfile with a summary  of each variable  ###################################  
@@ -70,16 +71,16 @@ def scatterplot(x_value, y_value, colour):
             y = df[y_value], 
             deg = 1                    #Degree of the polynomial 
                       ) 
-    r_value = correlation_matrix.loc[x_value, y_value] #Get the regression fit from the correlation matrix 
+    r_value = correlation_matrix.loc[x_value, y_value] #Get the R value from the correlation matrix. The correlation matrix can be indexed using .loc("column name", "row name") as it is a Pandas dataframe. 
 
-    fig, ax = plt.subplots() # subplot() creates two variables, a matplotlib figure and axis. Assign variable names ax and fig
+    fig, ax = plt.subplots()
     fig.subplots_adjust(bottom = 0.2)
     scatterplot = ax.scatter(df[x_value], df[y_value], 
                             c = df[colour], #color the scatterplot points by petal width
                             cmap = "viridis") # specify the color map
     
     ax.plot(df[x_value], m*df[x_value]+c, c = "red", label = f"Linear Regression Fit, R = {r_value:.2f}") # plot the least squares fit line identified in the numpy polyfit 
-                                                                                                                      # x value will still be sepal length, y value will be m*x + c
+                                                                                                          # x value will still be sepal length, y value will be m*x + c
     
     ax.set_xlabel(x_value)
     ax.set_ylabel(y_value)
@@ -149,12 +150,12 @@ count_by_species = petal_length_by_species.count()#The no. of data points in eac
 #Scipy will perform an indenpendent 2 sample t-test on the groups and return the calculated t statistics and the p-value
 #The test performed assumes equal variances within the two groups
 tstatistic_petal_length, pvalue_petal_length =scipy.stats.ttest_ind_from_stats(mean1 = mean_petal_length_by_species["versicolor"], std1 = std_petal_length_by_species ["versicolor"], nobs1 = count_by_species["versicolor"],
-                                 mean2 = mean_petal_length_by_species["virginica"], std2 = std_petal_length_by_species ["virginica"], nobs2 = count_by_species["virginica"])
+                                 mean2 = mean_petal_length_by_species["virginica"], std2 = std_petal_length_by_species ["virginica"], nobs2 = count_by_species["virginica"]) #Assigned variable names to the two returned values 
 
 #Perform an Oneway ANOVA to determine if a statistically significant difference in Sepal Length exists between the three species. 
 
 tstatistic_sepal_length, pvalue_sepal_length = scipy.stats.f_oneway(
-    df.groupby(["species"]).get_group("setosa")["sepal_length"],
+    df.groupby(["species"]).get_group("setosa")["sepal_length"], #getgroup() filter method to return a subset of the dataframe 
     df.groupby(["species"]).get_group("versicolor")["sepal_length"],
     df.groupby(["species"]).get_group("virginica")["sepal_length"]
 )
@@ -172,15 +173,13 @@ ax.set_title("Heatmap of Correlations between Variables")
 fig.savefig("Heatmap of Correlations between Variables.png")
 
 ############################### 5. Multivariate Analysis: PCA ###################################
-from sklearn.decomposition import PCA 
 
-pca = PCA(n_components=5)
-scores = pca.fit_transform(numeric_df) 
-loadings = (pca.components_.T)
+pca = PCA(n_components=5) #returns
+scores = pca.fit_transform(numeric_df) #returns
+loadings = (pca.components_.T) #Returns
 scree = pd.DataFrame(pca.explained_variance_ratio_, index=[1,2,3,4,5])
 species_numeric = numeric_df.species
 
-# fig, axs = plt.subplots(2,2, figsize = (9,9))
 fig, axs = plt.subplots(1, 3, figsize=(19, 5), layout = "constrained")          
 
 for name, label in [("Setosa", 0), ("Versicolour", 1), ("Virginica", 2)]:
