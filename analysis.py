@@ -22,12 +22,12 @@ species_means = {
     "Petal Length": list(df.groupby(["species"])["petal_length"].mean()),
     "Petal Width": list(df.groupby(["species"])["petal_width"].mean())
 }
-species_means_df = pd.DataFrame.from_dict(species_means, orient='index', columns=species) #Why did I convert back into df? 
+species_means_df = pd.DataFrame.from_dict(species_means, orient='index', columns=species) #Convert dict to Pd df in order to use to_markdown() 
 numeric_df = df.replace({'setosa':0,'versicolor':1, 'virginica':2}) #Need to recode the categorical variable "species" as a numeric variable as .corr() only accepts a numeric df
 correlation_matrix = (numeric_df.corr()) #Returns a correlation matrix with the R values for the correlation between each of the numeric variables.
                                                                                      
 
-###############################  1. Textfile with a summary  of each variable  ###################################  
+###############################  1. Overview of the Data  ###################################  
 # Print the summary statistics of all the variables of the data set into a text file:
 def create_text_file_with_summary_of_variables(filename):
     if os.path.exists(filename):
@@ -45,10 +45,13 @@ def create_text_file_with_summary_of_variables(filename):
                     \n \
                     \n{species_means_df.to_markdown()}'
                     )
-            
-create_text_file_with_summary_of_variables(filename)
 
-###############################  2. Histogram of each variable  ###################################
+if __name__ == "__main__": #Don't want to run this when I import the analysis.py module into my jupyter notebook           
+    create_text_file_with_summary_of_variables(filename)
+
+###############################  2. Exploratory Data Analysis  ###################################
+
+# Histogram of each variable:
 
 def histogram(x_value):
     fig, ax = plt.subplots()
@@ -58,13 +61,32 @@ def histogram(x_value):
     ax.set_title(f"Distribution of {x_value} in Iris Data Set")
     fig.savefig(f"Histogram {x_value}")
 
-histogram("sepal_length")
-histogram("sepal_width")
-histogram("petal_length")
-histogram("petal_width")
+if __name__ == "__main__": #Don't want to run these when I import the analysis.py module into my jupyter notebook
+    histogram("sepal_length")
+    histogram("sepal_width")
+    histogram("petal_length")
+    histogram("petal_width")
 
-############################### 3. Scatterplot of each variable  ###################################
+# Overlay histogram of each variable distributed by species
 
+def histogram_by_species(x_value):
+    fig, ax = plt.subplots()
+    ax.hist(df.groupby(["species"]).get_group("setosa")[x_value], edgecolor = "black", label = "Setosa")
+    ax.hist(df.groupby(["species"]).get_group("versicolor")[x_value], edgecolor = "black", label = "Versicolor")
+    ax.hist(df.groupby(["species"]).get_group("virginica")[x_value], edgecolor = "black", label = "Virginica")
+    ax.set_xlabel(f"{x_value} (cm)")
+    ax.set_ylabel(f"{x_value} (count)")
+    ax.set_title(f"{x_value} Distribution by Species")
+    ax.legend()
+    fig.savefig(f"{x_value} Distribution by Species")
+
+if __name__ == "__main__": #Don't want to run these when I import the analysis.py module into my jupyter notebook
+    histogram_by_species("petal_length")
+    histogram_by_species("sepal_length")
+    histogram_by_species("petal_width")
+
+############################### 3. Bivariate Analysis: Correlations ###################################
+# Scatterplot of each numeric variable: 
 def scatterplot(x_value, y_value, colour):
     m, c = np.polyfit(                 #Identify the best fit line, y = mx+c, for x vs y, using Numpy's polyfit to do a least squares fit determine m and c
             x = df[x_value], 
@@ -92,38 +114,40 @@ def scatterplot(x_value, y_value, colour):
     r_square = r_value**2
     string = (f"The observed significance probability for the regression fit of {x_value} and {y_value} is {p_value:.2g}.\nThe R squared is {r_square:.2f}.")
 
-    plt.figtext(0,0, string, wrap=True, bbox=dict(boxstyle="round", #Matplotlib documentation: https://matplotlib.org/stable/gallery/text_labels_and_annotations/fancytextbox_demo.html#sphx-glr-gallery-text-labels-and-annotations-fancytextbox-demo-py
+    plt.figtext(0,0, string, wrap=True, bbox=dict(boxstyle="round",
                    ec=(1., 0.5, 0.5),
                    fc=(1., 0.8, 0.8)))
     fig.savefig(f"Scatterplot of {x_value} and {y_value} ", bbox_inches = 'tight') #To prevent savefig cropping the edges, use bbox_inches = tight, https://stackoverflow.com/questions/37427362/plt-show-shows-full-graph-but-savefig-is-cropping-the-image
 
-scatterplot("sepal_length", "petal_length", "petal_width")
-scatterplot("sepal_length", "petal_width", "petal_length")
-scatterplot("sepal_length", "sepal_width", "petal_width")
-scatterplot("petal_length", "petal_width", "sepal_length")
-scatterplot("sepal_width", "petal_width", "petal_length")
-scatterplot("sepal_width", "petal_length", "petal_width")
+if __name__ == "__main__": #Don't want to run these when I import the analysis.py module into my jupyter notebook
+    scatterplot("sepal_length", "petal_length", "petal_width")
+    scatterplot("sepal_length", "petal_width", "petal_length")
+    scatterplot("sepal_length", "sepal_width", "petal_width")
+    scatterplot("petal_length", "petal_width", "sepal_length")
+    scatterplot("sepal_width", "petal_width", "petal_length")
+    scatterplot("sepal_width", "petal_length", "petal_width")
 
-############################### 4. Bivariate Analysis: Correlations ###################################
 
-#4.1 Categorical Variables Correlations: How do the Iris flower attributes measured vary between the different species? 
+
+#Categorical Variables Correlations: How do the Iris flower attributes measured vary between the different species? 
 
 #Plot a bar chart of mean Sepal  length, Sepal Width, Petal Width and Petal length by species on the same plot
 x = np.arange(len(species))  # returns a numpy array same length as the species list created earlier
 
-fig, ax = plt.subplots()
+if __name__ == "__main__":
+    fig, ax = plt.subplots()
 
-ax.bar(x+0.2, species_means["Sepal Length"], width = 0.2, label = "Sepal Length") # x values offset by 0.2 (width of the bars)
-ax.bar(x+0.4, species_means["Sepal Width"], width = 0.2, label = "Sepal Width")
-ax.bar(x, species_means["Petal Length"], width = 0.2, label="Petal Length")
-ax.bar(x+0.6, species_means["Petal Width"], width = 0.2, label="Petal Width")
+    ax.bar(x+0.2, species_means["Sepal Length"], width = 0.2, label = "Sepal Length") # x values offset by 0.2 (width of the bars)
+    ax.bar(x+0.4, species_means["Sepal Width"], width = 0.2, label = "Sepal Width")
+    ax.bar(x, species_means["Petal Length"], width = 0.2, label="Petal Length")
+    ax.bar(x+0.6, species_means["Petal Width"], width = 0.2, label="Petal Width")
 
-ax.set_ylabel('Length/ Width (mm)') #Label y axis 
-ax.set_xlabel('Species') #Label x axis
-ax.set_title('Iris Sepal and Petal Length and Width by Species') # Set title of bar chart 
-ax.set_xticks(x + 0.3, species) # Labels and ticks on the x axis, offset so that the ticks sit in the middle of the 4 bars
-fig.legend(loc = "upper right", bbox_to_anchor=(-0.13, 0.38, 0.5, 0.5)) # Setting the location of the legend.
-fig.savefig("Barchart by Species")
+    ax.set_ylabel('Length/ Width (mm)') #Label y axis 
+    ax.set_xlabel('Species') #Label x axis
+    ax.set_title('Iris Sepal and Petal Length and Width by Species') # Set title of bar chart 
+    ax.set_xticks(x + 0.3, species) # Labels and ticks on the x axis, offset so that the ticks sit in the middle of the 4 bars
+    fig.legend(loc = "upper right", bbox_to_anchor=(-0.13, 0.38, 0.5, 0.5)) # Setting the location of the legend.
+    fig.savefig("Barchart by Species")
 
 #From the barchart, petal length and sepal length seem to shows the most variance between species. Plot a boxplot of these variables by species 
 def boxplot(attribute, color_by):
@@ -134,9 +158,9 @@ def boxplot(attribute, color_by):
         ax1.set_title(f"Boxplot of {attribute} by Species")
         fig1.savefig(f"Boxplot of {attribute} by Species")
 
-
-boxplot("petal_length", "petal_width")
-boxplot("sepal_length", "sepal_width")
+if __name__ == "__main__":
+    boxplot("petal_length", "petal_width")
+    boxplot("sepal_length", "sepal_width")
 
 
 #Perform an Independent Samples Student's T test to determine if a statistically significant difference in Petal Length exists between the Versicolor and Virgnica species. 
@@ -160,51 +184,60 @@ tstatistic_sepal_length, pvalue_sepal_length = scipy.stats.f_oneway(
     df.groupby(["species"]).get_group("virginica")["sepal_length"]
 )
 
-#4.2: Continuous, Numerical Variable Correlations: How are each of the numeric variables correlated with each other? 
+#Continuous, Numerical Variable Correlations: How are each of the numeric variables correlated with each other? 
 
 # Plot a matrix of the scatterplot between each of the numeric variables in the data frame
-pairplot = sb.pairplot(data = df, hue = "species")
-pairplot.savefig("Scatterplot Matrix For Each Pair Of Variables in the Iris Data Set")
+if __name__ == "__main__":
+    pairplot = sb.pairplot(data = df, hue = "species")
+    pairplot.savefig("Scatterplot Matrix For Each Pair Of Variables in the Iris Data Set")
 
 # Colour map on correlation R values for each variable (including encoded categorical species variable) 
-fig, ax = plt.subplots(layout = "constrained")
-sb.heatmap(ax=ax, data = correlation_matrix, cmap = "coolwarm", vmin = -1, annot = True)
-ax.set_title("Heatmap of Correlations between Variables")
-fig.savefig("Heatmap of Correlations between Variables.png")
+if __name__ == "__main__":
+    fig, ax = plt.subplots(layout = "constrained")
+    sb.heatmap(ax=ax, data = correlation_matrix, cmap = "coolwarm", vmin = -1, annot = True)
+    ax.set_title("Heatmap of Correlations between Variables")
+    fig.savefig("Heatmap of Correlations between Variables.png")
 
-############################### 5. Multivariate Analysis: PCA ###################################
+############################### 4. Multivariate Analysis: PCA ###################################
 
-pca = PCA(n_components=5) #returns
-scores = pca.fit_transform(numeric_df) #returns
-loadings = (pca.components_.T) #Returns
-scree = pd.DataFrame(pca.explained_variance_ratio_, index=[1,2,3,4,5])
+pca = PCA(n_components=5)  
+scores = pca.fit_transform(numeric_df) 
+loadings = (pca.components_.T) 
+scree = pd.DataFrame(pca.explained_variance_ratio_, index = [1,2,3,4,5])
 species_numeric = numeric_df.species
 
-fig, axs = plt.subplots(1, 3, figsize=(19, 5), layout = "constrained")          
+if __name__ == "__main__":
+    fig, axs = plt.subplots(1, 3, figsize=(19, 5), layout = "constrained")          
 
-for name, label in [("Setosa", 0), ("Versicolour", 1), ("Virginica", 2)]:
-    axs[0].scatter(scores[species_numeric==label,0], scores[species_numeric==label,1], label = name)
-    axs[0].legend(loc="lower right")
-    axs[0].set_xlabel("Principal Component 1")
-    axs[0].set_ylabel("Principal Component 2")
-    axs[0].set_title("Scores Plot")
+    for name, label in [("Setosa", 0), ("Versicolour", 1), ("Virginica", 2)]:
+        axs[0].scatter(scores[species_numeric==label,0], scores[species_numeric==label,1], label = name)
+        axs[0].legend(loc="lower right")
+        axs[0].set_xlabel("Principal Component 1")
+        axs[0].set_ylabel("Principal Component 2")
+        axs[0].axhline(color="black")
+        axs[0].axvline(color="black")
+        axs[0].set_title("Scores Plot")
 
 
 
-axs[1].scatter(loadings[:,0],loadings[:,1], marker = "^", s = 150, c = "DarkRed")
-axs[1].set_xlabel("Principal Component 1")
-axs[1].set_ylabel("Principal Component 2")
-axs[1].set_title("Loadings Plot")
-for i, column_name in enumerate(list(df.columns.values)):
-    axs[1].annotate(text = column_name, xy = (loadings[i,0], loadings[i,1]), xytext = (-16,-16), textcoords=('offset points'))
-axs[1].set_ylim(-1, 1)
-axs[1].set_xlim(-1, 1)
+    axs[1].scatter(loadings[:,0],loadings[:,1], marker = "^", s = 150, c = "DarkRed")
+    axs[1].set_xlabel("Principal Component 1")
+    axs[1].set_ylabel("Principal Component 2")
+    axs[1].set_title("Loadings Plot")
+    for i, column_name in enumerate(list(df.columns.values)):
+        axs[1].annotate(text = column_name, xy = (loadings[i,0], loadings[i,1]), xytext = (-29,-16), textcoords=('offset points'))
+    axs[1].set_ylim(-1, 1)
+    axs[1].set_xlim(-1, 1)
+    axs[1].axhline(color="black")
+    axs[1].axvline(color="black")
 
-axs[2].plot(scree, "o", linestyle = "-")
-axs[2].set_xlabel("Principal Component")
-axs[2].set_xticks(ticks = [1,2,3,4,5], minor = 1)
-axs[2].set_xlim(0.5)
-axs[2].set_ylabel("Explained Variance")
-axs[2].set_title("Scree Plot")
-fig.savefig("Iris Principal Component Analysis.png")
+    axs[2].plot(scree, "o", linestyle = "-")
+    axs[2].set_xlabel("Principal Component")
+    axs[2].set_xticks(ticks = [1,2,3,4,5], minor = 1)
+    axs[2].set_xlim(0.5)
+    axs[2].set_ylabel("Explained Variance")
+    axs[2].set_title("Scree Plot")
+    fig.savefig("Iris Principal Component Analysis.png")
+
+
 
