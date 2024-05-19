@@ -23,7 +23,7 @@ species_means = {
     "Petal Width": list(df.groupby(["species"])["petal_width"].mean())
 }
 species_means_df = pd.DataFrame.from_dict(species_means, orient='index', columns=species) #Convert dict to Pd df in order to use to_markdown() 
-numeric_df = df.replace({'setosa':0,'versicolor':1, 'virginica':2}) #Need to recode the categorical variable "species" as a numeric variable as .corr() only accepts a numeric df
+numeric_df = df.replace({'setosa':0,'versicolor':1, 'virginica':2}) #Need to recode the categorical variable "species" as a numeric variable as .corr() and PCA objects only accept a numeric df
 correlation_matrix = (numeric_df.corr()) #Returns a correlation matrix with the R values for the correlation between each of the numeric variables.
                                                                                      
 
