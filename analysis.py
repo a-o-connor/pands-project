@@ -25,10 +25,12 @@ species_means = {
 species_means_df = pd.DataFrame.from_dict(species_means, orient='index', columns=species) #Convert dict to Pd df in order to use to_markdown() 
 numeric_df = df.replace({'setosa':0,'versicolor':1, 'virginica':2}) #Need to recode the categorical variable "species" as a numeric variable as .corr() and PCA objects only accept a numeric df
 correlation_matrix = (numeric_df.corr()) #Returns a correlation matrix with the R values for the correlation between each of the numeric variables.
-                                                                                     
+x = np.arange(len(species))  # returns a numpy array same length as the species list created earlier
 
+
+#Define the functions
 ###############################  1. Overview of the Data  ###################################  
-# Print the summary statistics of all the variables of the data set into a text file:
+# Function that prints the summary statistics of all the variables of the data set into a text file:
 def create_text_file_with_summary_of_variables(filename):
     if os.path.exists(filename):
         print(f"The file {filename} already exists in this directory. \nCheck {filename} in the folder {(os.getcwd())} for a summary of the variables in the Iris Dataset. ")
@@ -45,14 +47,8 @@ def create_text_file_with_summary_of_variables(filename):
                     \n \
                     \n{species_means_df.to_markdown()}'
                     )
-
-if __name__ == "__main__": #Don't want to run this when I import the analysis.py module into my jupyter notebook           
-    create_text_file_with_summary_of_variables(filename)
-
 ###############################  2. Exploratory Data Analysis  ###################################
-
-# Histogram of each variable:
-
+# Function that creates a Histogram of each variable:
 def histogram(x_value):
     fig, ax = plt.subplots()
     ax.hist(df[x_value], edgecolor = "black")
@@ -60,15 +56,7 @@ def histogram(x_value):
     ax.set_ylabel("Frequency")
     ax.set_title(f"Distribution of {x_value} in Iris Data Set")
     fig.savefig(f"Histogram {x_value}")
-
-if __name__ == "__main__": #Don't want to run these when I import the analysis.py module into my jupyter notebook
-    histogram("sepal_length")
-    histogram("sepal_width")
-    histogram("petal_length")
-    histogram("petal_width")
-
-# Overlay histogram of each variable distributed by species
-
+# Function that creats an overlaid histogram of each variable separated by species
 def histogram_by_species(x_value):
     fig, ax = plt.subplots()
     ax.hist(df.groupby(["species"]).get_group("setosa")[x_value], edgecolor = "black", label = "Setosa")
@@ -79,14 +67,8 @@ def histogram_by_species(x_value):
     ax.set_title(f"{x_value} Distribution by Species")
     ax.legend()
     fig.savefig(f"{x_value} Distribution by Species")
-
-if __name__ == "__main__": #Don't want to run these when I import the analysis.py module into my jupyter notebook
-    histogram_by_species("petal_length")
-    histogram_by_species("sepal_length")
-    histogram_by_species("petal_width")
-
 ############################### 3. Bivariate Analysis: Correlations ###################################
-# Scatterplot of each numeric variable: 
+# Function that creates a Scatterplot of each numeric variable, fits a line of best fit, and reports the R value, RSquare, and p value   
 def scatterplot(x_value, y_value, colour):
     m, c = np.polyfit(                 #Identify the best fit line, y = mx+c, for x vs y, using Numpy's polyfit to do a least squares fit determine m and c
             x = df[x_value], 
@@ -118,23 +100,8 @@ def scatterplot(x_value, y_value, colour):
                    ec=(1., 0.5, 0.5),
                    fc=(1., 0.8, 0.8)))
     fig.savefig(f"Scatterplot of {x_value} and {y_value} ", bbox_inches = 'tight') #To prevent savefig cropping the edges, use bbox_inches = tight, https://stackoverflow.com/questions/37427362/plt-show-shows-full-graph-but-savefig-is-cropping-the-image
-
-if __name__ == "__main__": #Don't want to run these when I import the analysis.py module into my jupyter notebook
-    scatterplot("sepal_length", "petal_length", "petal_width")
-    scatterplot("sepal_length", "petal_width", "petal_length")
-    scatterplot("sepal_length", "sepal_width", "petal_width")
-    scatterplot("petal_length", "petal_width", "sepal_length")
-    scatterplot("sepal_width", "petal_width", "petal_length")
-    scatterplot("sepal_width", "petal_length", "petal_width")
-
-
-
-#Categorical Variables Correlations: How do the Iris flower attributes measured vary between the different species? 
-
-#Plot a bar chart of mean Sepal  length, Sepal Width, Petal Width and Petal length by species on the same plot
-x = np.arange(len(species))  # returns a numpy array same length as the species list created earlier
-
-if __name__ == "__main__":
+#Function that Plots a bar chart of mean Sepal  length, Sepal Width, Petal Width and Petal length by species on the same plot
+def barchart():
     fig, ax = plt.subplots()
 
     ax.bar(x+0.2, species_means["Sepal Length"], width = 0.2, label = "Sepal Length") # x values offset by 0.2 (width of the bars)
@@ -148,8 +115,7 @@ if __name__ == "__main__":
     ax.set_xticks(x + 0.3, species) # Labels and ticks on the x axis, offset so that the ticks sit in the middle of the 4 bars
     fig.legend(loc = "upper right", bbox_to_anchor=(-0.13, 0.38, 0.5, 0.5)) # Setting the location of the legend.
     fig.savefig("Barchart by Species")
-
-#From the barchart, petal length and sepal length seem to shows the most variance between species. Plot a boxplot of these variables by species 
+#Function that Plots a boxplot of each variable by species 
 def boxplot(attribute, color_by):
         fig1, ax1 = plt.subplots()
         sb.boxplot(ax = ax1, x="species", y=attribute, data = df, color ="white")
@@ -157,11 +123,6 @@ def boxplot(attribute, color_by):
         sb.color_palette("viridis", as_cmap=True)
         ax1.set_title(f"Boxplot of {attribute} by Species")
         fig1.savefig(f"Boxplot of {attribute} by Species")
-
-if __name__ == "__main__":
-    boxplot("petal_length", "petal_width")
-    boxplot("sepal_length", "sepal_width")
-
 
 #Perform an Independent Samples Student's T test to determine if a statistically significant difference in Petal Length exists between the Versicolor and Virgnica species. 
 
@@ -187,12 +148,10 @@ tstatistic_sepal_length, pvalue_sepal_length = scipy.stats.f_oneway(
 #Continuous, Numerical Variable Correlations: How are each of the numeric variables correlated with each other? 
 
 # Plot a matrix of the scatterplot between each of the numeric variables in the data frame
-if __name__ == "__main__":
-    pairplot = sb.pairplot(data = df, hue = "species")
-    pairplot.savefig("Scatterplot Matrix For Each Pair Of Variables in the Iris Data Set")
+pairplot = sb.pairplot(data = df, hue = "species")
 
-# Colour map on correlation R values for each variable (including encoded categorical species variable) 
-if __name__ == "__main__":
+# Function that creates a Colour map on correlation R values for each variable (including encoded categorical species variable) 
+def heatmap():
     fig, ax = plt.subplots(layout = "constrained")
     sb.heatmap(ax=ax, data = correlation_matrix, cmap = "coolwarm", vmin = -1, annot = True)
     ax.set_title("Heatmap of Correlations between Variables")
@@ -206,7 +165,8 @@ loadings = (pca.components_.T)
 scree = pd.DataFrame(pca.explained_variance_ratio_, index = [1,2,3,4,5])
 species_numeric = numeric_df.species
 
-if __name__ == "__main__":
+#Function that plots a scores plot, loadings plot and scree plot from the PCA outputs
+def pca_plots():
     fig, axs = plt.subplots(1, 3, figsize=(19, 5), layout = "constrained")          
 
     for name, label in [("Setosa", 0), ("Versicolour", 1), ("Virginica", 2)]:
@@ -241,3 +201,24 @@ if __name__ == "__main__":
 
 
 
+if __name__ == "__main__": #Don't want to run this when I import the analysis.py module into my jupyter notebook           
+    create_text_file_with_summary_of_variables(filename)
+    histogram("sepal_length")
+    histogram("sepal_width")
+    histogram("petal_length")
+    histogram("petal_width")
+    histogram_by_species("petal_length")
+    histogram_by_species("sepal_length")
+    histogram_by_species("petal_width")
+    scatterplot("sepal_length", "petal_length", "petal_width")
+    scatterplot("sepal_length", "petal_width", "petal_length")
+    scatterplot("sepal_length", "sepal_width", "petal_width")
+    scatterplot("petal_length", "petal_width", "sepal_length")
+    scatterplot("sepal_width", "petal_width", "petal_length")
+    scatterplot("sepal_width", "petal_length", "petal_width")
+    barchart()
+    boxplot("petal_length", "petal_width")
+    boxplot("sepal_length", "sepal_width")
+    pairplot.savefig("Scatterplot Matrix For Each Pair Of Variables in the Iris Data Set")
+    heatmap()
+    pca_plots()
