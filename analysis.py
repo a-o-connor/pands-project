@@ -146,10 +146,6 @@ tstatistic_sepal_length, pvalue_sepal_length = scipy.stats.f_oneway(
 )
 
 #Continuous, Numerical Variable Correlations: How are each of the numeric variables correlated with each other? 
-
-# Plot a matrix of the scatterplot between each of the numeric variables in the data frame
-pairplot = sb.pairplot(data = df, hue = "species")
-
 # Function that creates a Colour map on correlation R values for each variable (including encoded categorical species variable) 
 def heatmap():
     fig, ax = plt.subplots(layout = "constrained")
@@ -219,6 +215,7 @@ if __name__ == "__main__": #Don't want to run this when I import the analysis.py
     barchart()
     boxplot("petal_length", "petal_width")
     boxplot("sepal_length", "sepal_width")
+    pairplot = sb.pairplot(data = df, hue = "species")
     pairplot.savefig("Scatterplot Matrix For Each Pair Of Variables in the Iris Data Set")
     heatmap()
     pca_plots()
